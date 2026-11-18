@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>زندگی آزاد ایران</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#182b24;color:white;font-family:tahoma;text-align:center}
+header{background:#087b4b;padding:12px;font-size:21px;font-weight:bold}
+#stats{background:#263c32;padding:12px;line-height:2}
+#game{height:48vh;min-height:280px;background:#b5c99b;position:relative;overflow:hidden;border:5px solid #344c39}
+#road{position:absolute;top:43%;height:75px;background:#555;width:100%}
+#road:after{content:"";position:absolute;top:35px;left:0;width:100%;border-top:4px dashed white}
+#player{position:absolute;top:35%;left:48%;font-size:35px;z-index:2}
+#players{position:absolute;inset:0;pointer-events:none}
+#places{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;padding:12px}
+button{background:#087b4b;color:white;border:0;border-radius:9px;padding:12px;font-size:14px}
+#message{padding:10px;color:#ffe28a}
+</style>
+</head>
+<body>
+<header>🇮🇷 زندگی آزاد ایران</header>
+<div id="stats">
+شهر: <span id="city">تهران</span><br>
+پول: <span id="money">۱٬۰۰۰٬۰۰۰٬۰۰۰</span> تومان<br>
+وضعیت سرور: <span id="status">در حال اتصال...</span>
+</div>
+<div id="game">
+<div id="road"></div>
+<div id="player">🧍</div>
+<div id="players"></div>
+</div>
+<div id="message">به تهران خوش آمدی!</div>
+<div id="places">
+<button onclick="travel('تهران')">تهران</button>
+<button onclick="travel('زنجان')">زنجان</button>
+<button onclick="travel('قم')">قم</button>
+<button onclick="travel('مشهد')">مشهد</button>
+<button onclick="travel('یزد')">یزد</button>
+<button onclick="taxi()">🚕 درخواست تاکسی</button>
+<button onclick="shop()">🛒 سوپرمارکت</button>
+<button onclick="place('برج میلاد')">🗼 برج میلاد</button>
+<button onclick="place('کلانتری')">🚔 کلانتری</button>
+<button onclick="place('نمایشگاه ماشین')">🚗 نمایشگاه</button>
+<button onclick="place('تعمیرگاه')">🔧 تعمیرگاه</button>
+<button onclick="place('رقص')">💃 رقص</button>
+</div>
+<script>
+const socket=io();
+let money=1000000000;
+let city="تهران";
+let x=48,y=35;
+socket.on("connect",()=>document.getElementById("status").textContent="متصل");
+socket.on("disconnect",()=>document.getElementById("status").textContent="قطع");
+socket.on("welcome",p=>{});
+socket.on("players",list=>{
+const area=document.getElementById("players");
+area.innerHTML="";
+Object.entries(list).forEach(([id,p])=>{
+if(id===socket.id)return;
+const el=document.createElement("span");
+el.textContent="🧍";
+el.style.position="absolute";
+el.style.left=p.x+"%";
+el.style.top=p.y+"%";
+area.appendChild(el);
+});
+});
+function move(dx,dy){
+x=Math.max(0,Math.min(95,x+dx));
+y=Math.max(0,Math.min(90,y+dy));
+document.getElementById("player").style.left=x+"%";
+document.getElementById("player").style.top=y+"%";
+socket.emit("move",{x,y});
+}
+function travel(c){
+city=c;
+document.getElementById("city").textContent=c;
+document.getElementById("message").textContent="به "+c+" سفر کردی!";
+}
+function taxi(){document.getElementById("message").textContent="🚕 تاکسی سمند درخواست شد!";}
+function shop(){document.getElementById("message").textContent="🛒 وارد سوپرمارکت شدی؛ فروشگاه در نسخه بعدی تکمیل می‌شود.";}
+function place(p){document.getElementById("message").textContent="مکان انتخاب‌شده: "+p;}
+document.addEventListener("keydown",e=>{
+if(e.key==="ArrowUp")move(0,-3);
+if(e.key==="ArrowDown")move(0,3);
+if(e.key==="ArrowLeft")move(-3,0);
+if(e.key==="ArrowRight")move(3,0);
+});
+</script>
+</body>
+</html>
